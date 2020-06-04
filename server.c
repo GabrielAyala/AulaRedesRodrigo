@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in server, client;
     char *message, client_reply[2000];
 
-    /* abre um socket */
+   
     socket_desc = socket(AF_INET, SOCK_STREAM, 0); 
     if (socket_desc == -1)
     {
@@ -19,12 +19,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    /* onde quero ouvir ? */
+    
     server.sin_family = AF_INET;
-    server.sin_addr.s_addr = INADDR_ANY; /* escute em qualquer IP da máquina */
+    server.sin_addr.s_addr = INADDR_ANY; 
     server.sin_port = htons(8888);
 
-    /* vincula o socket à porta e ao endereço informados */
+    
     if (bind(socket_desc, (struct sockaddr *) &server, sizeof(server)) < 0)
     {
         printf("Erro ao fazer o bind\n");
@@ -33,10 +33,10 @@ int main(int argc, char *argv[])
 
     printf("Bind efetuado.\n");
 
-    /* escutar */
+   
     listen(socket_desc, 3);
 
-    /* aceitar conexões entrantes */
+   
     printf("Aguardando conexões...\n");
     c = sizeof(struct sockaddr_in);
     while ((new_socket = accept(socket_desc, (struct sockaddr *) &client, (socklen_t*) &c)))
@@ -46,18 +46,21 @@ int main(int argc, char *argv[])
 
         printf("conexão aceita do client %s:%d\n", client_ip, client_port);
 
-        /* recebe dados do cliente */
-        if (recv(new_socket, client_reply, 2000, 0) < 0)
-        {
-            printf("Falha no recv\n");
-            return 1;
-        }
-        printf("Resposta recebida.\n");
-        printf("%s\n", client_reply);
+        do {
+            bzero(client_reply, sizeof(client_reply)); 
+            
+            if (recv(new_socket, client_reply, 2000, 0) < 0)
+            {
+                printf("Falha no recv\n");
+                return 1;
+            }
+            printf("Resposta recebida.\n");
+            printf("%s\n", client_reply);
 
-        /* resposta ao cliente */
-        message = "Olá Cliente! Recebi sua conexão, mas preciso ir agora! Tchau!";
-        write(new_socket, message, strlen(message));
+            
+            message = "Olá Cliente! Recebi sua conexão, mas preciso ir agora! Tchau!";
+            write(new_socket, message, strlen(message));
+        } while(strcmp(client_reply, "exit") != 0);
     }
     if (new_socket < 0) 
     {
